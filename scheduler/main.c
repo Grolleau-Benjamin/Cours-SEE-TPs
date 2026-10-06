@@ -25,9 +25,21 @@ uint64_t get_time_ms(void) {
 }
 
 void task_register(const char *name, uint32_t period_ms, uint32_t max_runs, void (*func)(void)) {
-    // TODO
-    // register a task
-    // !!! Check max tasks
+    task_t task;
+    task.name = name;
+    task.period_ms = period_ms;
+    task.max_runs = max_runs;
+    task.func = func;
+
+    if (task_count >= MAX_TASKS)
+    {
+        printf("Maximum amount of tasks registered reached: %d\n", task_count);
+        return;
+    }
+
+    tasks[task_count] = task;
+    task_count += 1;
+    printf("Registered task: name: %s | period_ms: %d | max_runs: %d | task count: %d\n", task.name, task.period_ms, task.max_runs, task_count);
 }
 
 void task_1_handler(void) {
@@ -43,7 +55,7 @@ int main(void) {
     task_register("LoggerTask", 500, 2, task_2_handler); // Runs 2 time
 
     while (true) {
-        printf("Time (ms): %d\n", get_time_ms());
+        //printf("Time (ms): %d\n", get_time_ms());
     }
 
     return 0;
