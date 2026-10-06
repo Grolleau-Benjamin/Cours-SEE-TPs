@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <time.h>
@@ -12,22 +13,20 @@ typedef struct {
     uint32_t max_runs;
     uint64_t last_run_ms;
     uint32_t run_count;
-    void (*func)(void);
+    void (*func)(int);
 } task_t;
 
 static task_t tasks[MAX_TASKS];
 static int task_count = 0;
 
 uint64_t get_time_ms(void) {
-    // TODO: return current time
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
     return ts.tv_nsec / 1000;
 }
 
-void task_register(const char *name, uint32_t period_ms, uint32_t max_runs, void (*func)(void)) {
-
-    if (task_count < MAX_TASKS) {
+void task_register(const char *name, uint32_t period_ms, uint32_t max_runs, void (*func)(int)) {
+    if (task_count < MAX_TASKS){
         tasks[task_count].name = name;
         tasks[task_count].period_ms = period_ms;
         tasks[task_count].max_runs = max_runs;
@@ -39,12 +38,16 @@ void task_register(const char *name, uint32_t period_ms, uint32_t max_runs, void
     return;
 }
 
-void task_1_handler(void) {
-    printf("-> Task 1 logic executed\n");
+void task_1_handler(int i) {
+    printf("Task %s", tasks[i].name);
+    printf(" executed\n");
+    printf("Nb_time : %d\n", tasks[i].run_count + 1);
 }
 
-void task_2_handler(void) {
-    printf("-> Task 2 logic executed\n");
+void task_2_handler(int i) {
+    printf("Task %s", tasks[i].name);
+    printf(" executed\n");
+    printf("Nb_time : %d\n", tasks[i].run_count + 1);
 }
 
 int main(void) {
@@ -55,7 +58,7 @@ int main(void) {
         for(int i = 0; i < task_count; i++){
             if (tasks[i].run_count < tasks[i].max_runs) {
                 if (current_time - tasks[i].last_run_ms >= tasks[i].period_ms) {
-                    tasks[i].func();
+                    tasks[i].func(i);
                     tasks[i].last_run_ms = current_time;
                     tasks[i].run_count++;
                 }
