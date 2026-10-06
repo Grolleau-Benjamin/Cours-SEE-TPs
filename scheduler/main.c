@@ -20,13 +20,31 @@ static int task_count = 0;
 
 uint64_t get_time_ms(void) {
     // TODO: return current time
-    return 0;
+    struct timespec *ts;
+    int clk_id = 0;
+    if (clock_gettime(clk_id,ts) == 0){
+        return ts->tv_sec;
+    }
+    printf("error with reading time!\n");
+    return -1;
 }
 
 void task_register(const char *name, uint32_t period_ms, uint32_t max_runs, void (*func)(void)) {
     // TODO
     // register a task
     // !!! Check max tasks
+
+    if(max_runs > MAX_TASKS){
+        printf("too many tasks asked, limit is %d\n",MAX_TASKS);
+        return;
+    }
+    for(int i = 0; i < max_runs ; i++){
+        tasks[i].name = name;
+        tasks[i].period_ms = period_ms;
+        tasks[i].max_runs = max_runs;
+        tasks[i].func = func;
+        printf("tasks number %d created!\n",i);
+    }
 }
 
 void task_1_handler(void) {
