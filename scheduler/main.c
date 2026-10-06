@@ -20,10 +20,11 @@ static int task_count = 0;
 
 uint64_t get_time_ms(void) {
     // TODO: return current time
-    struct timespec *ts;
+
+    struct timespec ts;
     int clk_id = 0;
-    if (clock_gettime(clk_id,ts) == 0){
-        return ts->tv_sec;
+    if (clock_gettime(clk_id,&ts) == 0){
+        return (ts.tv_nsec * 1000);
     }
     printf("error with reading time!\n");
     return -1;
@@ -34,17 +35,19 @@ void task_register(const char *name, uint32_t period_ms, uint32_t max_runs, void
     // register a task
     // !!! Check max tasks
 
-    if(max_runs > MAX_TASKS){
-        printf("too many tasks asked, limit is %d\n",MAX_TASKS);
+    if(task_count > MAX_TASKS){
+        printf("limit of tasks reached, limit is %d\n",MAX_TASKS);
         return;
     }
-    for(int i = 0; i < max_runs ; i++){
-        tasks[i].name = name;
-        tasks[i].period_ms = period_ms;
-        tasks[i].max_runs = max_runs;
-        tasks[i].func = func;
-        printf("tasks number %d created!\n",i);
-    }
+    tasks[task_count].name = name;
+    tasks[task_count].period_ms = period_ms;
+    tasks[task_count].max_runs = max_runs;
+    tasks[task_count].last_run_ms = get_time_ms();
+    tasks[task_count].run_count = 0;
+    tasks[task_count].func = func;
+    printf("tasks number %d created!\n",task_count);
+    task_count += 1;
+    return;
 }
 
 void task_1_handler(void) {
@@ -61,6 +64,13 @@ int main(void) {
 
     while (true) {
         // TODO: complete the loop
+        for(int i = 0; i < task_count ; i++){
+            if((tasks[i].run_count < tasks[i].max_runs) && (get_time_ms()-tasks[i].last_run_ms >= tasks[i].period_ms)){
+                tasks[i].func();
+                tasks[i].run_count += 1;
+                tasks[i].last_run_ms = get_time_ms();
+            }
+        }
     }
 
     return 0;
