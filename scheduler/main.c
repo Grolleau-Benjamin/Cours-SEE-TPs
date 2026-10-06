@@ -19,16 +19,29 @@ static task_t tasks[MAX_TASKS];
 static int task_count = 0;
 
 uint64_t get_time_ms(void) {
-    // TODO: return current time
-    return 0;
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+
+    return (uint64_t)ts.tv_sec * 1000
+         + (uint64_t)ts.tv_nsec / 1000000;
 }
 
-void task_register(const char *name, uint32_t period_ms, uint32_t max_runs, void (*func)(void)) {
-    // TODO
-    // register a task
-    // !!! Check max tasks
-}
+void task_register(const char *name, uint32_t period_ms,
+                   uint32_t max_runs, void (*func)(void)) {
 
+    if (task_count >= MAX_TASKS) {
+        return;  // nombre maximum de tâches atteint
+    }
+
+    tasks[task_count].name = name;
+    tasks[task_count].period_ms = period_ms;
+    tasks[task_count].max_runs = max_runs;
+    tasks[task_count].last_run_ms = get_time_ms();
+    tasks[task_count].run_count = 0;
+    tasks[task_count].func = func;
+
+    task_count++;
+}
 void task_1_handler(void) {
     printf("-> Task 1 logic executed\n");
 }
@@ -41,9 +54,33 @@ int main(void) {
     task_register("SensorTask", 100, 12, task_1_handler); // Runs 12 times
     task_register("LoggerTask", 500, 2, task_2_handler); // Runs 2 time
 
-    while (true) {
-        // TODO: complete the loop
+   while (true) {
+
+    uint64_t now = get_time_ms();
+    bool all_done = true;
+
+    for (int i = 0; i < task_count; i++) {
+
+        if (tasks[i].run_count < tasks[i].max_runs) {
+            all_done = false;
+
+            if (now - tasks[i].last_run_ms >= tasks[i].period_ms) {
+                
+                tasks[i].func();
+                printf("[%s] execution time: %llu ns\n",
+                       tasks[i].name,
+                       now - tasks[i].last_run_ms);
+                tasks[i].run_count++;
+                tasks[i].last_run_ms = now;
+            }
+        }
     }
 
+    if (all_done) {
+        break;
+    }
+
+    usleep(1000);
+}
     return 0;
 }
