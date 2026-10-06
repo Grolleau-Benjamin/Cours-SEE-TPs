@@ -19,8 +19,9 @@ static task_t tasks[MAX_TASKS];
 static int task_count = 0;
 
 uint64_t get_time_ms(void) {
-    // TODO: return current time
-    return 0;
+   struct _timespec64 time;
+   clock_gettime64(CLOCK_REALTIME, &time);
+   return time.tv_sec*1000 + time.tv_nsec/1000000;
 }
 
 void task_register(const char *name, uint32_t period_ms, uint32_t max_runs, void (*func)(void)) {
@@ -42,7 +43,7 @@ int main(void) {
     task_register("LoggerTask", 500, 2, task_2_handler); // Runs 2 time
 
     while (true) {
-        // TODO: complete the loop
+        printf("Time (ms): %d\n", get_time_ms());
     }
 
     return 0;
