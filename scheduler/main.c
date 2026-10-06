@@ -38,7 +38,7 @@ void task_register(const char *name, uint32_t period_ms, uint32_t max_runs, void
     }
 
     tasks[task_count] = task;
-    task_count += 1;
+    task_count++;
     printf("Registered task: name: %s | period_ms: %d | max_runs: %d | task count: %d\n", task.name, task.period_ms, task.max_runs, task_count);
 }
 
@@ -54,8 +54,34 @@ int main(void) {
     task_register("SensorTask", 100, 12, task_1_handler); // Runs 12 times
     task_register("LoggerTask", 500, 2, task_2_handler); // Runs 2 time
 
+    uint64_t start_time = get_time_ms();
     while (true) {
-        //printf("Time (ms): %d\n", get_time_ms());
+        int completed_task_count = 0;
+        for (int i = 0; i < task_count; i++)
+        {
+            uint64_t current_time = get_time_ms();
+            if (tasks[i].run_count < tasks[i].max_runs)
+            {
+                uint64_t time_elapsed_since_last_execution = current_time - tasks[i].last_run_ms;
+                if (time_elapsed_since_last_execution >= tasks[i].period_ms)
+                {
+                    tasks[i].last_run_ms = current_time;
+                    tasks[i].run_count++;
+                    printf("Task %s timer %d/%d ms, executed %d/%d ", tasks[i].name, time_elapsed_since_last_execution, tasks[i].period_ms, tasks[i].run_count, tasks[i].max_runs);
+                    tasks[i].func();
+                }
+
+                completed_task_count = 0;
+            }
+            else
+                completed_task_count++;
+        }
+
+        if (completed_task_count == task_count)
+        {
+            printf("All tasks completed.\n");
+            break;
+        }
     }
 
     return 0;
