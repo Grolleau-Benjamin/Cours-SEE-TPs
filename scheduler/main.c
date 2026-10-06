@@ -24,7 +24,7 @@ uint64_t get_time_ms(void) {
     struct timespec ts;
     int clk_id = 0;
     if (clock_gettime(clk_id,&ts) == 0){
-        return (ts.tv_nsec * 1000);
+        return (ts.tv_sec * 1000 + ts.tv_nsec / 1000000);
     }
     printf("error with reading time!\n");
     return -1;
