@@ -1,0 +1,10 @@
+# Dummy driver sample
+
+> [!WARNING]
+> Ce dossier est a cloner dans un workspace Zephyr
+
+## Run
+```
+west build -p always -b <board> sample
+west build -t run
+```
