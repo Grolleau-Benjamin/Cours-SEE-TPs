@@ -66,26 +66,32 @@ int main(void) {
     
     while (true) {
 
+        bool all_done =true;
+
         for(int i = 0 ; i < task_count ; i++)
         {
             uint64_t now = get_time_ms();
             
             uint32_t delta_time = now - tasks[i].last_run_ms;
-            if (delta_time >= tasks[i].period_ms &&
-                tasks[i].run_count < tasks[i].max_runs) {
-                tasks[i].run_count++;
-                printf("(lancement task) task : %s, nb run : %d, dernier appel : %d \n",tasks[i].name,tasks[i].run_count,delta_time);
-                tasks[i].func();
-                tasks[i].last_run_ms = now;
-                if(tasks[i].run_count==tasks[i].max_runs)
+            if (tasks[i].run_count < tasks[i].max_runs) 
+            {
+                all_done =false;
+
+                if (delta_time >= tasks[i].period_ms ) 
                 {
-                    printf("task %s finished\n",tasks[i].name);
-                    task_runing--;
+                    tasks[i].run_count++;
+                    printf("(lancement task) task : %s, nb run : %d, dernier appel : %d \n",tasks[i].name,tasks[i].run_count,delta_time);
+                    tasks[i].func();
+                    tasks[i].last_run_ms = now;
+                    if(tasks[i].run_count==tasks[i].max_runs)
+                    {
+                        printf("task %s finished\n",tasks[i].name);
+                    }
                 }
             }
         }
 
-        if(task_runing==0)
+        if(all_done)
         {
             return 0;
         }
