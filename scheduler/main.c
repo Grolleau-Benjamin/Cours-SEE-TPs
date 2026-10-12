@@ -40,7 +40,7 @@ void task_register(const char *name, uint32_t period_ms, uint32_t max_runs, void
     tasks[task_count].last_run_ms = get_time_ms();
     tasks[task_count].func = func;
 
-    task_count = task_count + 1 ;
+    task_count++;
 }
 
 void task_1_handler(void) {
@@ -58,29 +58,39 @@ int main(void) {
     while (true) {
         // TODO: complete the loop
         uint64_t now = get_time_ms();
-        int finish = 0;
+        bool all_finished = true;
 
-        for (int i = 0; i < task_count; i = i+1) {
+        for (int i = 0; i < task_count; i++) {
 
             if (tasks[i].run_count >= tasks[i].max_runs) {
-                finish = finish + 1;
                 continue;
             }
+            
+            all_finished = false;
 
-            if (now - tasks[i].last_run_ms >= tasks[i].period_ms) {
-                printf("[%s] time : %llu ms\n", tasks[i].name, now - tasks[i].last_run_ms);
-                tasks[i].func();
+            uint64_t delta = now - tasks[i].last_run_ms;
+
+            if (delta >= tasks[i].period_ms) {
+
                 tasks[i].run_count++;
+
+                printf("Task :%s | Run #%u/%u | Delta: %llu ms (Target: %u ms)\n",
+                       tasks[i].name,
+                       tasks[i].run_count,
+                       tasks[i].max_runs,
+                       (unsigned long long)delta,
+                       tasks[i].period_ms);
+
+                tasks[i].func();
+
                 tasks[i].last_run_ms = now;
             }
         }
 
-        if (finish == task_count) {
+        if (all_finished) {
             printf("Taches finies.\n");
             break;
         }
-
-        usleep(1000);
     }
     return 0;
 }
