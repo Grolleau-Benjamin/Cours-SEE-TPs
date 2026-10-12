@@ -25,21 +25,18 @@ uint64_t get_time_ms(void) {
 }
 
 void task_register(const char *name, uint32_t period_ms, uint32_t max_runs, void (*func)(void)) {
-    task_t task;
-    task.name = name;
-    task.period_ms = period_ms;
-    task.max_runs = max_runs;
-    task.func = func;
-
     if (task_count >= MAX_TASKS)
     {
         printf("Maximum amount of tasks registered reached: %d\n", task_count);
         return;
     }
 
-    tasks[task_count] = task;
+    tasks[task_count].name = name;
+    tasks[task_count].period_ms = period_ms;
+    tasks[task_count].max_runs = max_runs;
+    tasks[task_count].func = func;
+    printf("Registered task: name: %s | period_ms: %d | max_runs: %d | task count: %d\n", tasks[task_count].name, tasks[task_count].period_ms, tasks[task_count].max_runs, task_count+1);
     task_count++;
-    printf("Registered task: name: %s | period_ms: %d | max_runs: %d | task count: %d\n", task.name, task.period_ms, task.max_runs, task_count);
 }
 
 void task_1_handler(void) {
@@ -54,9 +51,8 @@ int main(void) {
     task_register("SensorTask", 100, 12, task_1_handler); // Runs 12 times
     task_register("LoggerTask", 500, 2, task_2_handler); // Runs 2 time
 
-    uint64_t start_time = get_time_ms();
     while (true) {
-        int completed_task_count = 0;
+        bool all_tasks_completed = true;
         for (int i = 0; i < task_count; i++)
         {
             uint64_t current_time = get_time_ms();
@@ -65,19 +61,17 @@ int main(void) {
                 uint64_t time_elapsed_since_last_execution = current_time - tasks[i].last_run_ms;
                 if (time_elapsed_since_last_execution >= tasks[i].period_ms)
                 {
-                    tasks[i].last_run_ms = current_time;
                     tasks[i].run_count++;
                     printf("Task %s timer %d/%d ms, executed %d/%d ", tasks[i].name, time_elapsed_since_last_execution, tasks[i].period_ms, tasks[i].run_count, tasks[i].max_runs);
                     tasks[i].func();
+                    tasks[i].last_run_ms = current_time;
                 }
 
-                completed_task_count = 0;
+                all_tasks_completed = false;
             }
-            else
-                completed_task_count++;
         }
 
-        if (completed_task_count == task_count)
+        if (all_tasks_completed)
         {
             printf("All tasks completed.\n");
             break;
