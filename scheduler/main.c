@@ -58,28 +58,25 @@ int main(void) {
     while (true) {
         // TODO: complete the loop
         uint64_t current_time = get_time_ms();
+        bool fini = true;
 
         for(int i=0; i<task_count; i++){
-            if(tasks[i].run_count < tasks[i].max_runs && current_time - tasks[i].last_run_ms>=tasks[i].period_ms){
-                
-                printf("%s Time : %llu ms\n", tasks[i].name, current_time - tasks[i].last_run_ms);
-                tasks[i].func();
-                tasks[i].last_run_ms = current_time;
-                tasks[i].run_count++;
-            }
-        }
-        bool fini = true;
-        for(int i=0; i < task_count; i++){
             if(tasks[i].run_count < tasks[i].max_runs){
-                fini = false;
-                break;
+                bool fini = false;
+
+                if(current_time - tasks[i].last_run_ms>=tasks[i].period_ms){
+                    printf("%s Time : %llu ms\n", tasks[i].name, current_time - tasks[i].last_run_ms);
+                    tasks[i].func();
+                    tasks[i].last_run_ms = current_time;
+                    tasks[i].run_count++;
             }
         }
-        if(fini){
+    }
+         if(fini){
             break;
         }
-        usleep(1000);
+        }
+    return 0;
     }
 
-    return 0;
-}
+    
