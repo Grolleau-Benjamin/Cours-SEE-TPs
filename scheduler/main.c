@@ -25,8 +25,7 @@ uint64_t get_time_ms(void) {
 
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
-    uint64_t time = ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
-    return time;
+    return (uint64_t)ts.tv_sec * 1000 + (uint64_t)ts.tv_nsec / 1000000;
 }
 
 void task_register(const char *name, uint32_t period_ms, uint32_t max_runs, void (*func)(void)) {
@@ -69,7 +68,7 @@ int main(void) {
 
             if (tasks[i].max_runs >= tasks[i].run_count && now - tasks[i].last_run_ms >=  tasks[i].period_ms)
             {
-                tasks[i].func(); // lance la 1ère
+                tasks[i].func(); // lance la 1ère@
                 printf("-> Temps : %llu\n", now);
                 tasks[i].last_run_ms = now; // actualise le temps de la 1ère
                 tasks[i].run_count ++;
@@ -77,7 +76,6 @@ int main(void) {
             }
             
         }
-        usleep(1000);
 
     }
 
