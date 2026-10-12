@@ -9,6 +9,7 @@
 static int shared_counter;
 
 /* TODO: q1 - declare the semaphore (initial count 1, limit 1) */
+K_SEM_DEFINE(sem, 1, 1);
 
 static void print_word(const char *word)
 {
@@ -23,6 +24,7 @@ static void worker(const char *name)
 {
     for (int i = 0; i < ITERATIONS; i++) {
         /* TODO: q1 - enter the critical section */
+        k_sem_take(&sem, K_FOREVER);
 
         int local = shared_counter;
 
@@ -32,6 +34,7 @@ static void worker(const char *name)
         shared_counter = local + 1;
 
         /* TODO: q1 - leave the critical section */
+        k_sem_give(&sem);
 
         k_sleep(K_MSEC(1));
     }
