@@ -3,7 +3,7 @@
 
 #define STACK_SIZE 1024
 #define PRIORITY   5
-#define ITERATIONS 10
+#define ITERATIONS 100
 
 /* TODO: reserve one stack per thread */
 K_THREAD_STACK_DEFINE(ping_stack, STACK_SIZE);
@@ -56,7 +56,7 @@ int main(void)
 					ping_stack, K_THREAD_STACK_SIZEOF(ping_stack),
 					ping_entry,
 					NULL, NULL, NULL,
-					PRIORITY,
+					PRIORITY-1,
 					0,
 					K_NO_WAIT);
 
@@ -68,10 +68,9 @@ int main(void)
 				   0,
 				   K_NO_WAIT);
 
+	/* TODO: wait for both threads to finish */
     k_thread_join(ping_tid, K_FOREVER);
     k_thread_join(pong_tid, K_FOREVER);
-
-	/* TODO: wait for both threads to finish */
 
 	printk("=== Done ===\n");
 	return 0;
