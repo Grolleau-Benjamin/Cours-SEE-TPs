@@ -53,7 +53,7 @@ static void ping_entry(void *p1, void *p2, void *p3)
 		/* TODO: attendre EVENT_BUTTON de maniere SAFE, puis lancer ping_work() */
 		    uint32_t  events;
 
-		events = k_event_wait_all_safe(&app_events, EVENT_BUTTON, false, K_MSEC(50));
+		events = k_event_wait_all_safe(&app_events, EVENT_BUTTON, false, K_FOREVER);
 		if (events == 0) {
 			printk("No input devices are available!\n");
 		} else {
