@@ -9,12 +9,14 @@
 #define STACK_SIZE 1024
 #define PRIORITY   5
 #define ITERATIONS 10
+#define EVENT_BUTTON BIT(0)
 
 // TODO: Declarer le bit  EVENT_BUTTON
 /* TODO: déclarer et initialiser l’objet k_event `app_events` */
+K_EVENT_DEFINE(app_events);
 
 static const struct gpio_dt_spec button =
-	GPIO_DT_SPEC_GET(DT_ALIAS(button0), gpios);
+	GPIO_DT_SPEC_GET(DT_ALIAS(sw0), gpios);
 
 static struct gpio_callback button_callback_data;
 
@@ -38,6 +40,7 @@ static void button_pressed(const struct device *port,
 	ARG_UNUSED(pins);
 
 	/* TODO: poster EVENT_BUTTON sur `app_events` */
+	k_event_set(&app_events, EVENT_BUTTON);
 }
 
 static void ping_entry(void *p1, void *p2, void *p3)
@@ -48,6 +51,15 @@ static void ping_entry(void *p1, void *p2, void *p3)
 
 	while (1) {
 		/* TODO: attendre EVENT_BUTTON de maniere SAFE, puis lancer ping_work() */
+		    uint32_t  events;
+
+		events = k_event_wait_all_safe(&app_events, EVENT_BUTTON, false, K_FOREVER);
+		if (events == 0) {
+			printk("No input devices are available!\n");
+		} else {
+			/* Access the desired input device(s) */
+			ping_work();
+		}
 	}
 }
 
