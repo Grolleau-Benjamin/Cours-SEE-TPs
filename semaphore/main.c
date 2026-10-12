@@ -9,6 +9,7 @@
 static int shared_counter;
 
 /* TODO: q1 - declare the semaphore (initial count 1, limit 1) */
+K_SEM_DEFINE(my_sem, 1, 1);
 
 static void print_word(const char *word)
 {
@@ -22,7 +23,9 @@ static void print_word(const char *word)
 static void worker(const char *name)
 {
     for (int i = 0; i < ITERATIONS; i++) {
+
         /* TODO: q1 - enter the critical section */
+        k_sem_take(&my_sem, K_FOREVER);
 
         int local = shared_counter;
 
@@ -32,6 +35,7 @@ static void worker(const char *name)
         shared_counter = local + 1;
 
         /* TODO: q1 - leave the critical section */
+        k_sem_give(&my_sem);
 
         k_sleep(K_MSEC(1));
     }
@@ -59,17 +63,34 @@ static void pong_entry(void *p1, void *p2, void *p3)
  *            This thread never calls k_sem_take().
  */
 
+static void waker_entry(void *p1, void *p2, void *p3)
+{
+    ARG_UNUSED(p1);
+    ARG_UNUSED(p2);
+    ARG_UNUSED(p3);
+
+    for (int i = 0; i < 20; i++) {
+        k_sleep(K_MSEC(20));
+        k_sem_give(&my_sem);
+    }
+}
+
+
+
 K_THREAD_STACK_DEFINE(ping_stack, STACK_SIZE);
 K_THREAD_STACK_DEFINE(pong_stack, STACK_SIZE);
+K_THREAD_STACK_DEFINE(waker_stack, STACK_SIZE);
 /* TODO: q2 - reserve a stack for the waker thread */
 
 static struct k_thread ping_thread_data;
 static struct k_thread pong_thread_data;
+static struct k_thread waker_thread_data;
 /* TODO: q2 - declare the waker thread control block */
+
 
 int main(void)
 {
-    k_tid_t ping_tid, pong_tid;
+    k_tid_t ping_tid, pong_tid, waker_tid;
 
     printk("=== Semaphore lab ===\n");
 
@@ -88,11 +109,19 @@ int main(void)
     k_thread_name_set(pong_tid, "pong");
 
     /* TODO: q2 - create the waker thread at WAKER_PRIORITY */
+    waker_tid = k_thread_create(&waker_thread_data,
+                   waker_stack, K_THREAD_STACK_SIZEOF(waker_stack),
+                   waker_entry,
+                   NULL, NULL, NULL,
+                   PRIORITY, 0, K_NO_WAIT);
+    k_thread_name_set(waker_tid, "WAKER");
 
     k_thread_join(ping_tid, K_FOREVER);
     k_thread_join(pong_tid, K_FOREVER);
+    k_thread_join(waker_tid, K_FOREVER);
 
     printk("counter = %d (expected %d)\n", shared_counter, 2 * ITERATIONS);
     printk("=== Done ===\n");
     return 0;
 }
+
