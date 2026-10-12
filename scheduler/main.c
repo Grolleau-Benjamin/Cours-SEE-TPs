@@ -62,7 +62,7 @@ int main(void) {
 
         for(int i=0; i<task_count; i++){
             if(tasks[i].run_count < tasks[i].max_runs){
-                bool fini = false;
+                fini = false;
 
                 if(current_time - tasks[i].last_run_ms>=tasks[i].period_ms){
                     printf("%s Time : %llu ms\n", tasks[i].name, current_time - tasks[i].last_run_ms);
