@@ -18,7 +18,7 @@ typedef struct {
 
 static task_t tasks[MAX_TASKS];
 static int task_count = 0;
-static int active_task_count = 0;
+bool task_active = false;
 
 uint64_t get_time_ms(void) {
     struct timespec tspec;
@@ -29,37 +29,22 @@ uint64_t get_time_ms(void) {
 
 void task_register(const char *name, uint32_t period_ms, uint32_t max_runs, void (*func)(void)) {
     
-    if (task_count <= MAX_TASKS)
-    {
-        task_t t = {
-            .name = name,
-            .period_ms = period_ms,
-            .max_runs = max_runs,
-            .run_count = 0,
-            .last_run_ms = 0,
-            .func = func,
-        };
-
-        tasks[task_count] = t;
-        printf("Register task %s, ID = %d \n", name, task_count);
-
-        task_count++;
-    }
-    else
+    if (task_count > MAX_TASKS)
     {
         printf("Error : Maximum number of task reached. Task %s was dropped. \n", name);
+        return;
     }
 
-}
+    tasks[task_count].name = name;
+    tasks[task_count].period_ms = period_ms;
+    tasks[task_count].max_runs = max_runs;
+    tasks[task_count].run_count = 0;
+    tasks[task_count].last_run_ms = 0;
+    tasks[task_count].func = func;
 
-void ms_sleep(int ms)
-{
-    struct timespec tspec = {
-        .tv_sec = (time_t)0,
-        .tv_nsec = ms*MSEC_IN_NSEC,
-    };
+    printf("Register task %s, ID = %d \n", name, task_count);
 
-    nanosleep(&tspec, NULL);
+    task_count++;
 }
 
 void print_task_stats(int task_id)
@@ -80,9 +65,8 @@ int main(void) {
     task_register("SensorTask", 100, 12, task_1_handler); // Runs 12 times
     task_register("LoggerTask", 500, 2, task_2_handler); // Runs 2 time
 
-    active_task_count = task_count;
-
     while (true) {
+        task_active = false;
 
         for (int i = 0; i < task_count; i++)
         {
@@ -92,6 +76,8 @@ int main(void) {
                 // Check for remaining runs
                 if(tasks[i].run_count < tasks[i].max_runs)
                 {
+                    task_active = true;
+
                     // Execute function
                     tasks[i].func();
 
@@ -103,17 +89,16 @@ int main(void) {
 
                     // Increment run_count
                     tasks[i].run_count++;
-
-                    // Max run count has been reached -> decrement active task counter
-                    if (tasks[i].run_count == tasks[i].max_runs)
-                    {
-                        active_task_count--;
-                    }
                 }
+            }
+            else
+            {
+                // Timer didn’t run out -> set to true to prevent breaking early
+                task_active = true;
             }
         }
 
-        if (!active_task_count)
+        if (!task_active)
         {
             printf("All tasks have been executed. Exiting...");
             break;
