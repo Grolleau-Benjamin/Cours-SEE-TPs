@@ -15,7 +15,7 @@ typedef struct {
     void (*func)(void);
 } task_t; //tache avec plusieurs infos
 
-static task_t tasks[MAX_TASKS]; //creer 10 taches
+static task_t tasks[MAX_TASKS]; //creer le nbre de taches demandées
 static int task_count = 0; //nbre de taches (apres chaque register)
 
 uint64_t get_time_ms(void) {
@@ -37,7 +37,7 @@ void task_register(const char *name, uint32_t period_ms, uint32_t max_runs, void
     tasks[task_count].func = func;
     tasks[task_count].last_run_ms = get_time_ms();
     tasks[task_count].run_count = 0;
-    task_count = task_count + 1;
+    task_count++;
     // TODO
     // register a task
     // !!! Check max tasks
@@ -57,16 +57,20 @@ int main(void) {
 
     while (true) {
         uint64_t temps = get_time_ms();
+        bool taches_finis = true;
         int i = 0;
-        for (i ; i<task_count ;i=i+1) {
+        for (i ; i<task_count ;i++) {   
             if (tasks[i].run_count < tasks[i].max_runs) {
+                taches_finis = false;
                 if (temps - tasks[i].last_run_ms >= tasks[i].period_ms) {
                 tasks[i].func();
                 tasks[i].last_run_ms = temps;
                 tasks[i].run_count++;
                 }
-            }        
-        // TODO: complete the loop
+            }
+        }
+        if (taches_finis == true) {
+            break;     
         }
     }
     return 0;
