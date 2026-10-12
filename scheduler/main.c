@@ -6,27 +6,38 @@
 
 #define MAX_TASKS 10
 
+// Définition de la structure de tâche
 typedef struct {
     const char *name;
-    uint32_t period_ms;
-    uint32_t max_runs;
-    uint64_t last_run_ms;
-    uint32_t run_count;
-    void (*func)(void);
+    uint32_t period_ms; // Période d'exécution
+    uint32_t max_runs; // Nombre d'exécutions total
+    uint64_t last_run_ms; // Dernière exécution
+    uint32_t run_count; // Compteur d'exécutions
+    void (*func)(void); // Pointeur vers la fonction de la tâche
 } task_t;
 
-static task_t tasks[MAX_TASKS];
-static int task_count = 0;
+static task_t tasks[MAX_TASKS]; // Tableau pour stocker les tâches
+static int task_count = 0; // Compteur de tâches enregistrées
 
 uint64_t get_time_ms(void) {
-    // TODO: return current time
-    return 0;
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+
+    return (uint64_t)(ts.tv_sec * 1000 + ts.tv_nsec / 1000000);
 }
 
 void task_register(const char *name, uint32_t period_ms, uint32_t max_runs, void (*func)(void)) {
-    // TODO
-    // register a task
-    // !!! Check max tasks
+
+    if (task_count >= MAX_TASKS) return;
+
+    tasks[task_count].name = name;
+    tasks[task_count].period_ms = period_ms;
+    tasks[task_count].max_runs = max_runs;
+    tasks[task_count].last_run_ms = 0;
+    tasks[task_count].run_count = 0;
+    tasks[task_count].func = func;
+
+    task_count++;
 }
 
 void task_1_handler(void) {
@@ -40,9 +51,28 @@ void task_2_handler(void) {
 int main(void) {
     task_register("SensorTask", 100, 12, task_1_handler); // Runs 12 times
     task_register("LoggerTask", 500, 2, task_2_handler); // Runs 2 time
+    int tasks_finished = 0;
 
     while (true) {
-        // TODO: complete the loop
+        uint64_t time = get_time_ms();
+
+        for(int i = 0; i < task_count; i++){
+
+            if (tasks[i].run_count < tasks[i].max_runs) { // Check le nombre d'executions
+                
+                if (time - tasks[i].last_run_ms >= tasks[i].period_ms) { // Check la période
+                    tasks[i].func();
+                    tasks[i].last_run_ms = time;
+                    tasks[i].run_count++;
+                }
+            }
+
+            if (tasks[i].run_count >= tasks[i].max_runs) {
+                tasks_finished++;
+            }
+        }
+
+        if (tasks_finished == task_count) break;
     }
 
     return 0;
