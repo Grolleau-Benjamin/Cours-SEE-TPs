@@ -5,11 +5,15 @@
 #define PRIORITY   5
 #define ITERATIONS 10
 
-/* TODO: reserve one stack per thread */
+// Def piles
+K_THREAD_STACK_DEFINE(ping_stack, STACK_SIZE);
+K_THREAD_STACK_DEFINE(pong_stack, STACK_SIZE);
 
-/* TODO: declare one thread control block per thread */
+static struct k_thread ping_thread;
+static struct k_thread pong_thread;
 
-/* TODO: q2 - declare the semaphores */
+K_SEM_DEFINE(sem_ping, 1, 1);
+K_SEM_DEFINE(sem_pong, 0, 1);
 
 static void ping_entry(void *p1, void *p2, void *p3)
 {
@@ -18,12 +22,11 @@ static void ping_entry(void *p1, void *p2, void *p3)
 	ARG_UNUSED(p3);
 
 	for (int i = 0; i < ITERATIONS; i++) {
-		/* TODO: q2 - wait for your turn */
 
-		printk("Ping\n");
-
-		/* TODO: q2 - hand the turn over */
-	}
+        k_sem_take(&sem_ping, K_FOREVER);
+        printk("Ping\n");
+        k_sem_give(&sem_pong);
+    }
 }
 
 static void pong_entry(void *p1, void *p2, void *p3)
@@ -33,22 +36,31 @@ static void pong_entry(void *p1, void *p2, void *p3)
 	ARG_UNUSED(p3);
 
 	for (int i = 0; i < ITERATIONS; i++) {
-		/* TODO: q2 - wait for your turn */
 
-		printk("Pong\n");
-
-		/* TODO: q2 - hand the turn over */
-	}
+        k_sem_take(&sem_pong, K_FOREVER);
+        printk("Pong\n");
+        k_sem_give(&sem_ping);
+    }
 }
 
 int main(void)
 {
 	printk("=== Threads lab ===\n");
 
-	/* TODO: create both threads */
-
-	/* TODO: wait for both threads to finish */
+	k_thread_create(&ping_thread, ping_stack,
+                    K_THREAD_STACK_SIZEOF(ping_stack),
+                    ping_entry, NULL, NULL, NULL,
+                    PRIORITY, 0, K_NO_WAIT);
+	
+	k_thread_create(&pong_thread, pong_stack,
+                    K_THREAD_STACK_SIZEOF(pong_stack),
+                    pong_entry, NULL, NULL, NULL,
+                    PRIORITY, 0, K_NO_WAIT);
+	
+	k_thread_join(&ping_thread, K_FOREVER);
+    k_thread_join(&pong_thread, K_FOREVER);
 
 	printk("=== Done ===\n");
+	
 	return 0;
 }
