@@ -8,6 +8,7 @@
 static int shared_counter;
 
 /* TODO: q2 - declare the mutex */
+K_MUTEX_DEFINE(our_mutex);
 
 static void print_word(const char *word)
 {
@@ -22,7 +23,7 @@ static void worker(const char *name)
 {
 	for (int i = 0; i < ITERATIONS; i++) {
 		/* TODO: q2 - enter the critical section */
-
+		k_mutex_lock(&our_mutex, K_FOREVER);
 		int local = shared_counter;
 
 		print_word(name);
@@ -31,6 +32,7 @@ static void worker(const char *name)
 		shared_counter = local + 1;
 
 		/* TODO: q2 - leave the critical section */
+		k_mutex_unlock(&our_mutex);
 
 		k_sleep(K_MSEC(1));
 	}
@@ -67,10 +69,10 @@ int main(void)
 	printk("=== Mutex lab ===\n");
 
 	/* TODO: q1 - create both threads, same priority */
-	thread_create(&ping_thread_data, ping_stack, STACK_SIZE,
+	k_thread_create(&ping_thread_data, ping_stack, STACK_SIZE,
 		       ping_entry, NULL, NULL, NULL,
 		       PRIORITY, 0, K_NO_WAIT);
-	thread_create(&pong_thread_data, pong_stack, STACK_SIZE,
+	k_thread_create(&pong_thread_data, pong_stack, STACK_SIZE,
 		       pong_entry, NULL, NULL, NULL,
 		       PRIORITY, 0, K_NO_WAIT);
 
