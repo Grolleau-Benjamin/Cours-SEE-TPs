@@ -9,7 +9,7 @@
 #define STACK_SIZE 1024
 #define PRIORITY   5
 #define ITERATIONS 10
-#define EVENT_BUTTON 1 << 2
+#define EVENT_BUTTON BIT(0)
 
 // TODO: Declarer le bit  EVENT_BUTTON
 
@@ -53,12 +53,7 @@ static void ping_entry(void *p1, void *p2, void *p3)
 
 	while (1) {
 		/* TODO: attendre EVENT_BUTTON de maniere SAFE, puis lancer ping_work() */
-		uint32_t events;
-
-		events = k_event_wait_safe(&app_events, EVENT_BUTTON, false, K_MSEC(50));
-		if(events == 0){
-			printk("No input device are available\n");
-		} else{
+		if(k_event_wait_safe(&app_events, EVENT_BUTTON, false, K_MSEC(50))){
 			ping_work();
 		}
 	}
