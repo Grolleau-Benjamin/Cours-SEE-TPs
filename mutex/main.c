@@ -8,6 +8,7 @@
 static int shared_counter;
 
 /* TODO: q2 - declare the mutex */
+K_MUTEX_DEFINE(mutex);
 
 static void print_word(const char *word)
 {
@@ -22,6 +23,7 @@ static void worker(const char *name)
 {
 	for (int i = 0; i < ITERATIONS; i++) {
 		/* TODO: q2 - enter the critical section */
+		k_mutex_lock(&mutex, K_FOREVER);
 
 		int local = shared_counter;
 
@@ -31,6 +33,7 @@ static void worker(const char *name)
 		shared_counter = local + 1;
 
 		/* TODO: q2 - leave the critical section */
+		k_mutex_unlock(&mutex);
 
 		k_sleep(K_MSEC(1));
 	}
@@ -96,28 +99,28 @@ int main(void)
 
 /*
 === Mutex lab ===
-PPionngg
-
-PPionngg
-
-PPionngg
-
-PPionngg
-
-PPionngg
-
-PPionngg
-
-PPionngg
-
-PPionngg
-
-PPionngg
-
-PPionngg
-
-counter = 10 (expected 20)
+Ping
+Pong
+Ping
+Pong
+Ping
+Pong
+Ping
+Pong
+Ping
+Pong
+Ping
+Pong
+Ping
+Pong
+Ping
+Pong
+Ping
+Pong
+Ping
+Pong
+counter = 20 (expected 20)
 === Done ===
 
-Le compteur n'est pas correct car les threads s'exécutent en parallèle
+Le compteur est correct car les threads ont utilisé le mutex pour protéger l'accès à la variable partagée.
 */
