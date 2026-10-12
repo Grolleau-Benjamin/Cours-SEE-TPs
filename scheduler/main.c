@@ -18,16 +18,13 @@ typedef struct {
 static task_t tasks[MAX_TASKS];
 static int task_count = 0;
 
-uint64_t get_time_ms(void) {
     // TODO: return current time
-    struct timespec ts;
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    uint64_t darwin_time_t_ms = (uint64_t)ts.tv_sec * 1000;
-    uint64_t long_ms = (uint64_t)ts.tv_nsec / 1000000;
-    uint64_t test = darwin_time_t_ms + long_ms;
-    //printf("Valeur : %llu\n", test);
-    return darwin_time_t_ms + long_ms;
-}
+uint64_t get_time_ms(void)
+    {
+        struct timespec ts;
+        clock_gettime(CLOCK_MONOTONIC, &ts);
+        return (uint64_t)ts.tv_sec * 1000 + (uint64_t)ts.tv_nsec / 1000000;
+    }
 
 void task_register(const char *name, uint32_t period_ms, uint32_t max_runs, void (*func)(void)) {
     // !!! Check max tasks
@@ -36,10 +33,9 @@ void task_register(const char *name, uint32_t period_ms, uint32_t max_runs, void
         return;
     }
     // register a task
-    task_t t1 = {.name = name,.period_ms = period_ms,.max_runs = max_runs,.run_count = 0,.last_run_ms = get_time_ms(),.func = func};
-    printf("Tâche : %s, période : %d ms, max : %d, run : %d, denrier run : %llu, func : %p\n", t1.name, t1.period_ms, t1.max_runs, t1.run_count, t1.last_run_ms, t1.func);   
-    tasks[task_count] = t1;
-    task_count = task_count+1;
+    tasks[task_count] = (task_t){.name = name,.period_ms = period_ms,.max_runs = max_runs,.run_count = 0,.last_run_ms = get_time_ms(),.func = func
+    };
+    task_count++;
     // TODO
 }
 
@@ -55,19 +51,28 @@ int main(void) {
     task_register("SensorTask", 100, 12, task_1_handler); // Runs 12 times
     task_register("LoggerTask", 500, 2, task_2_handler); // Runs 2 time
 
-while (true) {
+bool taches_terminees = false;
 
-        uint64_t time_actual = get_time_ms();
+while (!taches_terminees) {
 
-        for (int i = 0; i < task_count; i++) {
-            if (tasks[i].run_count < tasks[i].max_runs) {
-                if (time_actual - tasks[i].last_run_ms >= tasks[i].period_ms) {
-                    tasks[i].func();
-                    tasks[i].run_count++;
-                    tasks[i].last_run_ms = time_actual;
-                }
+    taches_terminees = true;
+
+    uint64_t now = get_time_ms();
+
+    for (int i = 0; i < task_count; i++) {
+
+        if (tasks[i].run_count < tasks[i].max_runs) {
+
+            taches_terminees = false;
+
+            if (now - tasks[i].last_run_ms >= tasks[i].period_ms) {
+                tasks[i].func();
+                tasks[i].run_count++;
+                tasks[i].last_run_ms = now;
             }
         }
     }
-    return 0;
+
+    usleep(1000);
+}
 }
