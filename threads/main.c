@@ -13,7 +13,8 @@ K_THREAD_STACK_DEFINE(pong_stack, STACK_SIZE);
 static struct k_thread ping_thread_data;
 static struct k_thread pong_thread_data;
 
-/* TODO: q2 - declare the semaphores */
+/* TODO: q3 - declare the semaphores */
+K_SEM_DEFINE(sem, 1, 1);
 
 static void ping_entry(void *p1, void *p2, void *p3)
 {
@@ -22,11 +23,14 @@ static void ping_entry(void *p1, void *p2, void *p3)
 	ARG_UNUSED(p3);
 
 	for (int i = 0; i < ITERATIONS; i++) {
-		/* TODO: q2 - wait for your turn */
+		/* TODO: q3 - wait for your turn */
+		k_sem_take(&sem, K_FOREVER);
 
 		printk("Ping\n");
+		K_SLEEP(K_MSEC(5));
 
-		/* TODO: q2 - hand the turn over */
+		/* TODO: q3 - hand the turn over */
+		k_sem_give(&sem);
 	}
 }
 
@@ -37,11 +41,14 @@ static void pong_entry(void *p1, void *p2, void *p3)
 	ARG_UNUSED(p3);
 
 	for (int i = 0; i < ITERATIONS; i++) {
-		/* TODO: q2 - wait for your turn */
+		/* TODO: q3 - wait for your turn */
+        k_sem_take(&sem, K_FOREVER);
 
 		printk("Pong\n");
+		K_SLEEP(K_MSEC(5));
 
-		/* TODO: q2 - hand the turn over */
+		/* TODO: q3 - hand the turn over */
+		k_sem_give(&sem);
 	}
 }
 
@@ -56,7 +63,7 @@ int main(void)
 					ping_stack, K_THREAD_STACK_SIZEOF(ping_stack),
 					ping_entry,
 					NULL, NULL, NULL,
-					PRIORITY-1,
+					PRIORITY,
 					0,
 					K_NO_WAIT);
 
