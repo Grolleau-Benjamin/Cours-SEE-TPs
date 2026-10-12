@@ -10,7 +10,7 @@
 typedef struct {
     const char *name;
     uint32_t period_ms; // Période d'exécution
-    uint32_t max_runs; // Maximum d'exécutions
+    uint32_t max_runs; // Nombre d'exécutions total
     uint64_t last_run_ms; // Dernière exécution
     uint32_t run_count; // Compteur d'exécutions
     void (*func)(void); // Pointeur vers la fonction de la tâche
@@ -48,14 +48,10 @@ void task_2_handler(void) {
     printf("-> Task 2 logic executed\n");
 }
 
-void task_3_handler(void) {
-    printf("-> Task 3 logic executed\n");
-}
-
 int main(void) {
-    task_register("SensorTask", 500, 12, task_1_handler); // Runs 12 times
-    task_register("LoggerTask", 1000, 2, task_2_handler); // Runs 2 time
-    task_register("PowerTask", 2000, 3, task_3_handler); // Runs 3 times
+    task_register("SensorTask", 100, 12, task_1_handler); // Runs 12 times
+    task_register("LoggerTask", 500, 2, task_2_handler); // Runs 2 time
+    int tasks_finished = 0;
 
     while (true) {
         uint64_t time = get_time_ms();
@@ -63,14 +59,20 @@ int main(void) {
         for(int i = 0; i < task_count; i++){
 
             if (tasks[i].run_count < tasks[i].max_runs) { // Check le nombre d'executions
-
+                
                 if (time - tasks[i].last_run_ms >= tasks[i].period_ms) { // Check la période
                     tasks[i].func();
                     tasks[i].last_run_ms = time;
                     tasks[i].run_count++;
                 }
             }
+
+            if (tasks[i].run_count >= tasks[i].max_runs) {
+                tasks_finished++;
+            }
         }
+
+        if (tasks_finished == task_count) break;
     }
 
     return 0;
