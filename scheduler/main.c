@@ -46,7 +46,7 @@ void task_register(const char *name, uint32_t period_ms, uint32_t max_runs, void
     tasks[task_count].run_count = 0;
     tasks[task_count].func = func;
     printf("tasks number %d created!\n",task_count);
-    task_count += 1;
+    task_count ++;
     return;
 }
 
@@ -62,15 +62,20 @@ int main(void) {
     task_register("SensorTask", 100, 12, task_1_handler); // Runs 12 times
     task_register("LoggerTask", 500, 2, task_2_handler); // Runs 2 time
 
+    int cnt = 0;
+
     while (true) {
         // TODO: complete the loop
         for(int i = 0; i < task_count ; i++){
             if((tasks[i].run_count < tasks[i].max_runs) && (get_time_ms()-tasks[i].last_run_ms >= tasks[i].period_ms)){
+                printf("Run #%d/%d | delta : %d ms (target : %d ms)\n",tasks[i].run_count+1,tasks[i].max_runs,get_time_ms()-tasks[i].last_run_ms,tasks[i].period_ms);
                 tasks[i].func();
-                tasks[i].run_count += 1;
+                tasks[i].run_count ++;
+                if(tasks[i].run_count == tasks[i].max_runs) cnt++;
                 tasks[i].last_run_ms = get_time_ms();
             }
         }
+        if (cnt == task_count) break;
     }
 
     return 0;
