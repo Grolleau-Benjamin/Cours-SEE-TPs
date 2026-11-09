@@ -11,7 +11,11 @@
 #define ITERATIONS 10
 
 // TODO: Declarer le bit  EVENT_BUTTON
+#define EVENT_BUTTON BIT(0)
+
 /* TODO: déclarer et initialiser l’objet k_event `app_events` */
+static struct k_event app_events;
+K_EVENT_DEFINE(app_events, EVENT_BUTTON);
 
 static const struct gpio_dt_spec button =
 	GPIO_DT_SPEC_GET(DT_ALIAS(button0), gpios);
@@ -38,6 +42,8 @@ static void button_pressed(const struct device *port,
 	ARG_UNUSED(pins);
 
 	/* TODO: poster EVENT_BUTTON sur `app_events` */
+	k_event_post(&app_events, EVENT_BUTTON);
+
 }
 
 static void ping_entry(void *p1, void *p2, void *p3)
@@ -48,11 +54,15 @@ static void ping_entry(void *p1, void *p2, void *p3)
 
 	while (1) {
 		/* TODO: attendre EVENT_BUTTON de maniere SAFE, puis lancer ping_work() */
+		k_event_wait(&app_events, EVENT_BUTTON, false, K_FOREVER);
+		ping_work();
 	}
 }
 
 int main(void)
 {
+	k_event_init(&app_events);
+
 	if (!device_is_ready(button.port)) {
 		printk("Erreur : le contrôleur GPIO du bouton n’est pas prêt\n");
 		return -ENODEV;
