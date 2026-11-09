@@ -30,7 +30,7 @@ def unsigned(value):
 
 
 def payload(device, seq, command, value) -> bytes:
-    if not re.fullmatch(r"[A-Za-z0-9_-]{1, 32}", device):
+    if not re.fullmatch(r"[A-Za-z0-9_-]{1,32}", device):
         raise ValueError(f"Invalid device id: {device}.")
 
     seq, value = unsigned(seq), unsigned(value)
