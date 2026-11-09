@@ -1,3 +1,7 @@
 *_correction.*
 *.out
 *.exe
+*_correction*
+build/
+.cache/
+twister*
